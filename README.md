@@ -277,4 +277,36 @@ public class MyAspect {
 		-->
    <aop:aspectj-autoproxy proxy-target-class="true"/>
 ```
+### Spring事物
+
+事务是指一组sql语句的集合，集合中有多条sql语句，我们希望这些sql语句集合都能执行成功或者失败，
+
+这些sql语句执行是一致，作为一个整体。
+
+事务应该放在service类的业务方法上，业务方法会调用多个dao方法，执行sql语句
+
+Spring提供处理事务的统一模型，能使用统一步骤，方式完成多种不同数据库访问技术的事务处理。
+
+Spring处理事务的模型，使用的步骤都是固定的。把事务的信息提供给Spring就可以了
+
+1）事务内部提交，回滚事物，使用事务管理器对象，代替你完成commit，rollback
+
+​	事物管理器是一个接口和他的众多实现类。
+
+​	接口：PlatformTransactionMannager，定义了事务重要方法 commit，rollback
+
+​	实现类：Spring把每种数据库访问技术相对应的事物处理类都创建好了
+
+​				mybatis访问数据库——Spring创建好的类是DataSourceTransactionMannger
+
+​				hibernate访问数据库——Spring创建好的类是HibernateTransactionMannger
+
+​	只用你告诉Spring你用的那种数据库的访问技术就可以使用，怎么告诉Spring呢？
+
+​	声明数据库访问技术对应的事物管理器实现类，使用Spring配置文件中的bean标签声明
+
+```xml
+<bean id="xxx" class="...DataSoureceTransactionMannger">
+```
+
 
