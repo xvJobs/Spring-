@@ -357,7 +357,6 @@ Spring处理事务的模型，使用的步骤都是固定的。把事务的信�
 ​	3.当你的业务方法抛出非运行异常，主要是受查异常时，提交事物
 
 ​		受查异常：在你写的代码汇总，必须处理的异常，例如IOException。SQLException
-
 ### 总结Spring事物
 
 1.管理事物的是事物管理器和他的实现类
@@ -369,4 +368,102 @@ Spring处理事务的模型，使用的步骤都是固定的。把事务的信�
 ​	2.指定那些类，哪些方法需要加入事物的功能
 
 ​	3.指定方法需要的隔离级别，传播行为，超时
+
+#### Spring框架中提供的事务处理方案
+
+##### 1.适合中小项目使用，注解方案。
+
+​	Spring框架自己用aop实现给业务方法增加事务的功能，使用@Transaction注解增加事务。
+
+​	@Transaction注解是Spring框架自己注解，放在public方法的上面，表示当前方法具有事务
+
+​	可以给注解的属性赋值，表示具体的隔离级别，传播行为，异常信息等等。需要声明事务管理器对象。
+
+##### 2.适合大型项目，使用AspectJ的apo配置管理事务
+
+​	有很多的类，方法，需要大量的配置事务，使用aspectj框架功能，在Spring配置文件中
+
+​	声明类，方法需要的事务。这种方式业务方法和事务配置完全分离。
+
+​	1.实现步骤：在xml配置文件中实现。
+
+​			1）声明事务管理对象
+
+​			2）声明方法需要的事务类型（配置方法的事务属性{隔离级别，传播行为，超时}）
+
+```xml
+<!-- id：自定义名称，表示<tx:advice>和</tx：advice>之间的配置内容的
+		transction-manager：事物管理器对象的id
+-->
+		<tx:advice id="xxx" transaction-manager="transactionManager">
+      <!-- 配置事务属性 -->
+        <tx:attributes>
+          <!-- tx:method：给具体的方法配置事务属性，method可以有多个，分别给不同的方法设置事务
+								name：方法名称，完整的方法名称，不带有包和类。方法可以使用通配符，*表示任意字符
+								propagation：传播行为，枚举值
+								isolation：隔离级别
+								rollvack-for：你指定的异常类，全限定类名。发生异常一定回滚
+					-->
+            <tx:method name="" propagation="" isolation="" rollback-for=""/>
+        </tx:attributes>
+    </tx:advice>
+
+
+	    <aop:config>
+        <!-- 配置切入点表达式：指定哪些包中类，要使用事务 
+						id：切入点表达式的名称，唯一值
+						expression：切入点表达式，指定那些类要使用事物，aspectj会创建代理对象
+				-->
+        <aop:pointcut id="" expression=""/>
+        <!-- 配置增强器：关联advice和pointcut
+  					advice-ref：通知，上面tx：advice哪里的配置
+						pointcut-ref：切入点表达式的id
+      	-->
+        <aop:advisor advice-ref="" pointcut-ref=""/>
+   	 </aop:config>
+```
+
+​			3）配置aop：指定哪些类要创建代理。
+
+### 监听器
+
+web项目中容器对象只需要创建一次，把容器对象放入全局作用域ServletContext中
+
+监听器被创建对象后，会读取/WEB-INF/spring.xml
+
+为什么要读区文件：因为在监听器中创建ApplicationContext对象，需要加载配置文件。
+
+/WEB-INF/applicationContext.xml就是监听器默认读区的Spring配置文件路径
+
+可以修改默认的文件位置，使用context-param重新制定文件的位置。
+
+```java
+WebApplicationContext wac =null;
+//获取ServletContext中的容器对象
+String key = WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE;
+Object attr = getServicetContext().getAttribute(key);
+if (attr != null){
+  wac = (WebApplicationContext)attr;
+}
+// 使用框架中的方法，获取容器对象
+ServiceContext sc = getServletContext();
+ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(sc);
+```
+
+
+
+```xml
+<context-param>
+  <!-- contextConfigLocation:表示配置文件的路径 -->
+		<param-name>contextConfigLocation</param-name>
+  <!-- 自定义配置文件的路径 -->
+  	<param-value>classpath:spring.xml</param-value>
+</context-param>
+
+<!-- 注册监听器ContextLoaderListener -->
+<listener>
+		<listener-class>org.springframework.web.context.ContextLoderlistener</listener-class>
+</listener>
+```
+
 
